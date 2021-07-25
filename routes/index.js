@@ -6,18 +6,16 @@ var request = require('sync-request');
 
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
-  res.redirect('login');
-});
-
-router.get('/login', function(req, res, next) {
-  res.render('login');
-});
 
 router.get('/weather', async function(req, res, next){
+  // console.log('GET /weather req.query', req.query)
+  console.log('GET /weather req.session.user', req.session.user)
+  if (req.session.user === undefined) {
+    res.redirect('/')
+  }
   var cityList = await cityModel.find();
   var erreur = false;
-  // console.log('GET /weather req.session :', req.session)
+  // console.log('GET /weather req.session.user :', req.session.user)
   res.render('weather', {cityList, erreur})
 });
 
@@ -84,28 +82,32 @@ router.get('/update-cities', async function(req, res, next){
 });
 
 router.post('/sign-up', async function(req, res, next) {
-  // console.log('POST /sign up req.body', req.body);
+  console.log('POST /sign up req.body', req.body.username.length);
+  if (req.body.username.length > 0 && req.body.email.length > 0 && req.body.password.length > 0) {
+
+    var newUser = new UserModel ({
+      username: req.body.username,
+      email: req.body.email,
+      password: req.body.password
+    });
   
-  var newUser = new UserModel ({
-    username: req.body.username,
-    email: req.body.email,
-    password: req.body.password
-  });
-
-  var user = await UserModel.findOne({
-    email : req.body.email
-  })
-  // console.log('POST /sign-up existing user#1', user)
-  // console.log('POST /sign-up newUser : #1', newUser)
-
-  if (user === null){
-    // console.log('POST /sign-up existing user user#2', user)
-    // console.log('POST /sign-up newUser : #2', newUser)
-    await newUser.save();
-    req.session.user ={
-      id :newUser._id,  
-      username: newUser.username
-    }
+    //On cherche si cette email existe
+    var user = await UserModel.findOne({ 
+      email : req.body.email
+    })
+    // console.log('POST /sign-up existing user#1', user)
+    // console.log('POST /sign-up newUser : #1', newUser)
+    
+    //Si email pas existant on sign-up
+    if (user === null){
+      // console.log('POST /sign-up existing user user#2', user)
+      // console.log('POST /sign-up newUser : #2', newUser)
+      await newUser.save(); // add user to BDD
+      req.session.user ={
+        id :newUser._id,  
+        username: newUser.username
+      }
+  }
     // console.log('/sign-up req.session :', req.session.user);
     res.redirect('/weather');
     
@@ -120,6 +122,7 @@ router.post('/sign-up', async function(req, res, next) {
 
 router.post('/sign-in', async function(req, res, next){
   // console.log('POST /sign-in req.body', req.body);
+  console.log('POST /sign-in req.session.user', req.session.user)
   
   var users = await UserModel.find({email: req.body.email, password: req.body.password});
   
@@ -147,6 +150,14 @@ router.get('/logout', function (req, res, next){
   // console.log('GET /logout req.session.user.user #2: ', req.session.user)
   res.redirect('/')
 })
+
+router.get('/', function(req, res, next) {
+  res.redirect('login');
+});
+
+router.get('/login', function(req, res, next) {
+  res.render('login');
+});
 
 module.exports = router;
 
