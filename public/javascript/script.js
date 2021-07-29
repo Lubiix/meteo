@@ -1,5 +1,6 @@
 var mymap = L.map('mymap').setView([48.866667, 2.333333,4], 13);
 
+
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(mymap);
@@ -30,6 +31,7 @@ for (var index = 0; index < city.length; index++) {
     
         popupAnchor: [-3,-76]
     });
+    
     L.marker([citypos.lat, citypos.lon], {icon: customIcon}).addTo(mymap).bindPopup(citypos.cityname)
 }
 
